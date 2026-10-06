@@ -310,7 +310,7 @@ docker-compose.yml
 ## 21. Контакты
 
 - **Михаил Волков** — Product Owner, Backend Developer — Telegram: `@Mitorn`
-- **Елизавета Тропина** — ML Engineer — Telegram: `@...`
+- **Елизавета Тропина** — ML Engineer — Telegram: `@crabs_co`
 - **Иван Савчук** — Frontend Developer — Telegram: `@...`
 
 Общие вопросы и спорные решения — обсуждаем в issue с меткой `discussion`,
