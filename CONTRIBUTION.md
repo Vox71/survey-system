@@ -213,19 +213,19 @@ docker-compose.yml
 ### Ветки
 
 - `main` — стабильная версия, защищена от прямых пушей.
-- `feat/<краткое-название>` — новая функциональность.
+- `feature/<краткое-название>` — новая функциональность.
 - `fix/<краткое-название>` — исправление бага.
 - `chore/<краткое-название>` — рутина (CI, зависимости, конфиги).
 - `docs/<краткое-название>` — документация.
 - `refactor/<краткое-название>` — рефакторинг без изменения поведения.
 
-Пример: `feat/survey-pagination`, `fix/ml-timeout`.
+Пример: `feature/survey-pagination`, `fix/ml-timeout`.
 
 ### Коммиты — Conventional Commits
 
 Формат: `<тип>(<область>): <описание>`
 
-- `feat:` — новая функция
+- `feature:` — новая функция
 - `fix:` — исправление бага
 - `docs:` — документация
 - `style:` — форматирование
@@ -234,7 +234,7 @@ docker-compose.yml
 - `chore:` — рутина
 
 Примеры:
-- `feat(surveys): add pagination`
+- `feature(surveys): add pagination`
 - `fix(ml): handle empty answers`
 - `chore(ci): bump ruff to 0.6`
 
