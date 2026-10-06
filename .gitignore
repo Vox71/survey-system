@@ -1,0 +1,132 @@
+# ============================================================
+# Environment / secrets
+# ============================================================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# ============================================================
+# Python (backend + ml_service)
+# ============================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Packaging / build
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.tox/
+.nox/
+
+# ============================================================
+# ML artifacts
+# ============================================================
+# Веса моделей и сериализованные артефакты — не в git
+ml_service/models_store/
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+*.onnx
+*.safetensors
+
+# Датасеты (кроме маленького «золотого» — его можно оставить и явно разрешить ниже)
+data/
+datasets/
+*.parquet
+*.feather
+
+# Если есть золотой датасет для тестов — раскомментируйте и уточните путь
+# !ml_service/tests/fixtures/golden_small.csv
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# ============================================================
+# Node / frontend (React + Vite + TS)
+# ============================================================
+node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.cache/
+
+# Логи пакетных менеджеров
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+
+# Тестовое покрытие фронта
+frontend/coverage/
+
+# ============================================================
+# Docker
+# ============================================================
+# Локальные override-файлы не коммитим
+docker-compose.override.yml
+docker-compose.*.local.yml
+
+# ============================================================
+# PostgreSQL / локальные данные
+# ============================================================
+*.sql.gz
+pgdata/
+postgres-data/
+
+# ============================================================
+# IDE / editors
+# ============================================================
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.example.json
+
+.idea/
+*.iml
+
+*.swp
+*.swo
+*~
+
+# ============================================================
+# OS
+# ============================================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ============================================================
+# Logs / runtime
+# ============================================================
+*.log
+logs/
+tmp/
+temp/
