@@ -19,38 +19,29 @@
 
 ```mermaid
 flowchart LR
-    user([Браузер / curl]) -->|"${FRONTEND_PORT:-3000}:80"| frontend["frontend (nginx)"]
-    user -->|"${APP_PORT:-8000}:8000"| app["backend (FastAPI)"]
-    frontend -->|"app:8000"| app
+    user([Браузер / curl]) -->|"${APP_PORT:-8000}:8000"| app["backend (FastAPI)"]
     app -->|"db:5432"| db[("PostgreSQL 16")]
-    app -->|"redis:6379"| redis[("Redis 7")]
-    app -->|"ml_service:8001"| ml["ML-сервис (FastAPI)"]
     db --- pgdata[("pgdata")]
-    redis --- redisdata[("redisdata")]
-    ml --- models[("model_store")]
 ```
 
 ## 2. Таблица сервисов
 
 | Сервис | Образ или сборка | Порты `хост:контейнер` | Переменные окружения (только имена, без значений) | Тома | Зависит от (условие) | Healthcheck |
 |---|---|---|---|---|---|---|
-| `frontend` | build: `./frontend` (multi-stage, nginx) | `${FRONTEND_PORT:-3000}:80` | `VITE_API_URL` (build arg) | — | `app` (`service_started`) | `curl -f http://localhost/` |
-| `app` | build: `.` (Dockerfile, `python:3.11-slim`) | `${APP_PORT:-8000}:8000` | `DATABASE_URL`, `REDIS_URL`, `ML_SERVICE_URL`, `APP_ENV`, `SECRET_KEY` | — | `db` (`service_healthy`), `redis` (`service_healthy`), `ml_service` (`service_started`) | `curl -f http://localhost:8000/health` |
-| `ml_service` | build: `./ml_service` | не публикуется, внутри сети `8001` | `MODEL_PATH`, `LOG_LEVEL` | `model_store:/app/models` | — | `curl -f http://localhost:8001/health` |
+| `app` | build: `.` (Dockerfile, `python:3.11-slim`) | `${APP_PORT:-8000}:8000` | `DATABASE_URL` | — | `db` (`service_healthy`) | `curl -f http://localhost:8000/health` |
 | `db` | `postgres:16` | не публикуется, внутри сети `5432` | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | `pgdata:/var/lib/postgresql/data` | — | `pg_isready -U $POSTGRES_USER -d $POSTGRES_DB` |
-| `redis` | `redis:7-alpine` | не публикуется, внутри сети `6379` | `REDIS_PASSWORD` | `redisdata:/data` | — | `redis-cli ping` → `PONG` |
 
-Дополнительные сервисы: `frontend` — интерфейс пользователя; `ml_service` — инференс и разметка аномалий; `redis` — кэш и rate limiting. Порты БД, Redis и ML-сервиса наружу не публикуются: к ним обращается только backend внутри сети Compose. Порты `app` и `frontend` опубликованы для браузера: `${APP_PORT}` — API и `/docs`, `${FRONTEND_PORT}` — интерфейс.
+Порт приложения `${APP_PORT:-8000}` опубликован для браузера и `/docs`; порт БД наружу не публикуется — к нему обращается только `app` внутри сети Compose. `frontend` и ML-сервис в практику №3 не входят и в `compose.yaml` не добавляются.
 
 Порт хоста приложения вынесен в переменную `${APP_PORT:-8000}:8000` — тот, у кого 8000 занят, сменит его в своём `.env`.
 
 ## 3. Ответы на контрольные вопросы
 
 1. **Адрес базы.** Приложение подключается к БД по адресу `postgresql://surveyguard@db:5432/surveyguard`. Полная строка подключения вместе с паролем передаётся в переменной `DATABASE_URL`.
-2. **Судьба данных.** После `docker compose down` именованные тома `pgdata`, `redisdata` и `model_store` сохраняются, данные остаются на месте. После `docker compose down -v` тома удаляются вместе со всеми данными БД, Redis и моделями.
-3. **Образ и запуск.** В образ приложения попадают исходный код, runtime Python и зависимости из `requirements.txt`. При запуске контейнера передаются переменные окружения (включая `DATABASE_URL` и секреты), опубликованные порты, тома и команда запуска. Файл `.env` в образ не копируется.
+2. **Судьба данных.** После `docker compose down` именованный том `pgdata` сохраняется, данные БД остаются на месте. После `docker compose down -v` том удаляется вместе с данными.
+3. **Образ и запуск.** В образ приложения попадают исходный код, runtime Python и зависимости, зафиксированные lock-файлом uv/Poetry. При запуске контейнера передаются переменные окружения (включая `DATABASE_URL`), опубликованные порты, тома и команда запуска. Файл `.env` в образ не копируется.
 4. **Миграции.** Гипотеза: при старте контейнера `app` entrypoint выполняет `alembic upgrade head`, после чего запускает `uvicorn`. Альтернатива — отдельный one-shot сервис `migrate` с `depends_on: db: condition: service_healthy`. Проверяется на практике №3.
-5. **Запуск и проверка.** Поднять стек: `docker compose up --build -d`. Проверить: `curl -fsS "http://localhost:${APP_PORT:-8000}/health"` — ожидаемый ответ `{"status":"healthy"}`; дополнительно `docker compose ps` показывает запущенные сервисы.
+5. **Запуск и проверка.** Поднять стек: `docker compose up --build -d`. Проверить: `curl -fsS "http://localhost:${APP_PORT:-8000}/health"` — ожидаемый ответ `{"status":"healthy","database":"ok"}`; без базы — `503`. Дополнительно `docker compose ps` показывает запущенные сервисы.
 
 ## 4. Проверка схемы другой командой
 
