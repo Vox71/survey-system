@@ -52,9 +52,38 @@ Backend и ML-сервис — отдельные приложения. Backend 
 
 Проект в активной разработке. Идёт работа над MVP: базовое голосование, авторизация, первый набор правил фильтрации и обучение модели на синтетических данных.
 
-## Установка и запуск
+## Запуск через Docker Compose
 
-(Будет добавлено позже — после стабилизации docker-compose и появления `.env.example` в основном репозитории.)
+Нужно: Docker с Compose v2 или новее (`docker compose version` отвечает), свободный порт 8000.
+
+1. Создать файл с переменными окружения из примера:
+
+   ```bash
+   cp .env.example .env            # Windows PowerShell: Copy-Item .env.example .env
+   ```
+
+   Открыть `.env` и заменить `changeme` на свой пароль базы (латинские буквы и цифры).
+
+2. Поднять стек:
+
+   ```bash
+   docker compose up --build
+   ```
+
+3. Проверить — во втором окне терминала или в браузере: `http://localhost:8000/health` отвечает `{"status":"healthy","database":"ok"}`, `docker compose ps` показывает `db` в состоянии `healthy`.
+
+4. Остановить: `Ctrl+C` или `docker compose down`. Удалить вместе с данными базы: `docker compose down -v`.
+
+Порт 8000 занят — задайте в `.env` `APP_PORT=8001` и проверяйте `http://localhost:8001/health`.
+
+## Локальная разработка без Docker
+
+```bash
+uv sync
+uv run uvicorn main:app --reload
+```
+
+Базы в этом режиме нет: `/` отвечает `200`, `/health` — `503` с `{"status":"unhealthy","database":"DATABASE_URL is not set"}`.
 
 ## API
 
@@ -67,10 +96,10 @@ OpenAPI-документация генерируется FastAPI автомат
 | Метод | Путь | Описание |
 | --- | --- | --- |
 | GET | `/` | Приветствие |
-| GET | `/health` | Проверка работоспособности |
+| GET | `/health` | Проверка приложения и подключения к PostgreSQL |
 | GET | `/version` | Версия приложения и команда-владелец |
 
-Запуск: `uvicorn main:app --reload`.
+`GET /health` возвращает `{"status":"healthy","database":"ok"}` при доступной базе и `503` — при недоступной.
 
 ## Структура репозитория
 
@@ -78,15 +107,17 @@ OpenAPI-документация генерируется FastAPI автомат
 backend/        # FastAPI, бизнес-логика, БД
 ml_service/     # feature engineering, модели, /predict
 frontend/       # React + TS + Vite
-docker-compose.yml
-openapi.yaml
+compose.yaml
+Dockerfile
+.env.example
 CONTRIBUTING.md
 ```
 
 ## Документация
 
 - `CONTRIBUTING.md` — правила разработки, стиль кода, чек-лист перед PR.
-- `openapi.yaml` — спецификация HTTP API.
+- `docs/adr/` — ADR 001 и ADR 002.
+- `docs/environment-schema.md` — схема окружения проекта.
 
 ## Лицензия
 
