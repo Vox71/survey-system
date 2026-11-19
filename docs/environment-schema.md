@@ -28,7 +28,7 @@ flowchart LR
 
 | Сервис | Образ или сборка | Порты `хост:контейнер` | Переменные окружения (только имена, без значений) | Тома | Зависит от (условие) | Healthcheck |
 |---|---|---|---|---|---|---|
-| `app` | build: `.` (Dockerfile, `python:3.11-slim`) | `${APP_PORT:-8000}:8000` | `DATABASE_URL` | — | `db` (`service_healthy`) | `curl -f http://localhost:8000/health` |
+| `app` | build: `.` (Dockerfile, `python:3.11-slim`) | `${APP_PORT:-8000}:8000` | `DATABASE_URL` | — | `db` (`service_healthy`) | `python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"` |
 | `db` | `postgres:16` | не публикуется, внутри сети `5432` | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | `pgdata:/var/lib/postgresql/data` | — | `pg_isready -U $POSTGRES_USER -d $POSTGRES_DB` |
 
 Порт приложения `${APP_PORT:-8000}` опубликован для браузера и `/docs`; порт БД наружу не публикуется — к нему обращается только `app` внутри сети Compose. `frontend` и ML-сервис в практику №3 не входят и в `compose.yaml` не добавляются.
@@ -81,5 +81,6 @@ flowchart LR
 | Замечание или рекомендация | Что изменили, почему не согласны или учтёте ли рекомендацию |
 |---|---|
 | Блокирующих замечаний нет | Схему менять не потребовалось: состав сервисов, порты, том, переменные и порядок запуска уже соответствуют будущему `compose.yaml` |
-| Добавить в README команду `cp .env.example .env` и проверку `/health` | Рекомендацию принимаем. Добавим эти шаги в раздел README «Запуск через Docker Compose» при выполнении практики №3; на схему это не влияет |
+| Добавить в README команду `cp .env.example .env` и проверку `/health` | Рекомендация учтена: README содержит `cp .env.example .env` и проверку `/health` после `docker compose up --build` |
+| Практика №3: фактический `compose.yaml` | Стек собран по схеме: `app` + `db`, том `pgdata`, healthcheck БД. Healthcheck приложения реализован через Python, без `curl`; схема обновлена |
 
